@@ -1,0 +1,106 @@
+/* 
+ * SplitSlice
+ *
+ * 選択したスライスをx軸とy軸で分割する
+ *
+ */
+
+ // スライスデータを取得
+var select = fw.selection[0];
+var sliceID = fw.selection[0].sliceID;
+var width = select.width;
+var height = select.height;
+var top = select.top;
+var left = select.left;
+var rect = {
+	top: select.pixelRect.top,
+	right: select.pixelRect.right,
+	bottom: select.pixelRect.bottom,
+	left: select.pixelRect.left
+};
+
+// 分割する数を指定
+var xSplitNum = prompt('x', '1');
+var ySplitNum = prompt('y', '1');
+
+// ピクセルを指定数で分割
+var onceWidth = Math.floor(width / xSplitNum);
+var onceHeight = Math.floor(height / ySplitNum);
+// 分割したピクセルの余りを算出
+var widthSurplus = width % xSplitNum;
+var heightSurplus = height % ySplitNum;
+
+var once = {
+	top: rect.top,
+	left: rect.left,
+	right: rect.left + onceWidth,
+	bottom: rect.top + onceHeight
+};
+
+// 選択したスライスを削除
+fw.getDocumentDOM().deleteSelection(false);
+
+// X軸の処理をY軸の分割数分行う
+function createSlice(){
+	// Y軸の処理
+	var yCounter = 1;
+	for (var _i = 0; _i < ySplitNum; _i++) {
+		// Y軸の位置をリセット
+		if (yCounter === 1){
+			once.top = rect.top;
+		} else {
+			once.top += onceHeight;
+			once.bottom += onceHeight;
+		}
+		// 最後の行のスライスには剰余のピクセルをheightに足す
+		if (yCounter === ySplitNum){
+			once.bottom = once.top + onceHeight + heightSurplus;
+		} else {
+			once.bottom = once.top + onceHeight;
+		}
+
+		// X軸の処理
+		var xCounter = 1;
+		for (var i = 0; i < xSplitNum; i++) {
+			// 1個目のスライスの処理 X軸の位置をリセット
+			if (xCounter === 1){
+				once.left = rect.left;
+			} else {
+				once.left += onceWidth;
+			}
+			// 最後の列のスライスには剰余のピクセルをwidthに足す
+			if (xCounter === xSplitNum){
+				once.right = once.left + onceWidth + widthSurplus;
+			} else {
+				once.right = once.left + onceWidth;
+			}
+			// スライスを生成
+			fw.getDocumentDOM().addNewHotspot("slice", "rectangle", {left: once.left, top: once.top, right: once.right, bottom: once.bottom});
+			xCounter++;
+		};
+		// X軸のカウンターをリセットしてY軸のカウンターをインクリメント
+		xCounter = 1;
+		yCounter++;
+	}
+}
+createSlice();
+
+// if (fw.selection[0]){
+// 	alert('selected');
+// } else {
+// 	alert('no selected');
+// }
+
+// Fireworksスクリプトはオブジェクトが選択された状態（fw.selectionが存在する状態）でないと動かない？
+// スライスを選択した状態での実行結果
+// alert(fw.selection); // object FwArray
+// alert(fw.selection[0]); // object RectanglePrimitive
+// alert(0 in fw.selection); // false
+// alert(fw.selection instanceof Array); // false
+// alert(fw.selection[0] instanceof Array); // false
+// alert(fw.selection[0].object); // undefined
+// alert(fw.selection[0].SliceHotspot); // undefined
+// alert(fw.selection.length); // 1
+
+// 画像のリサイズ関数
+// fw.getDocumentDOM().scaleSelection(1/* 横の比率 */, 1/* 縦の比率 */, "autoTrimImages");

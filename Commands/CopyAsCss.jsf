@@ -1,0 +1,172 @@
+/*
+ * copyAsCss
+ * 
+ * テキスト/borderをcss形式でクリップボードにコピーする
+ * 
+ * Todo
+ * - borderとshadowも対応したい
+ * - カラーコードのショートハンドを共通化
+ * - プロパティのソート
+ * 
+ */
+
+// statement
+var selection = fw.selection[0];
+
+// スライスと矩形がselection.constructor.nameでクラス名を取得できないので
+// オブジェクトをtoStringした値で判定する
+var objType = selection.toString();
+
+// for border
+if (objType === '[object RectanglePrimitive]') {
+	if (selection.height == 1) {
+		var border = {};
+		border.position = 'border-bottom:';
+
+		// ブラシ(線)で設定されている場合
+		if (selection.pathAttributes.brush) {
+			border.color = selection.pathAttributes.brushColor;
+			border.width = '1px';
+			var texture = selection.pathAttributes.brush.name;
+			if (texture == 'bn_1-Pixel Anti-Aliased' || texture == '1 ピクセルの柔い線') {
+				border.style = 'dotted';
+			} else if (texture == 'bn_1-Pixel' || texture == '1 ピクセルの硬い線') {
+				border.style = 'solid';
+			}
+		} else {
+			// プロパティで設定されている場合
+			border.color = selection.pathAttributes.fillColor;
+			border.width = '1px';
+			var texture = selection.pathAttributes.fillTexture.name;
+			if (selection.pathAttributes.fill.textureBlend == 0) {
+				var disableTexture = true;
+			} else {
+				var disableTexture = false;
+			}
+			if (!disableTexture) {
+				if (texture === 'Line-Vert 2') {
+					border.style = 'dotted';
+				} else if (texture === 'Grid 3') {
+					border.style = 'dotted';
+				} else if (texture === 'Line-Vert 3') {
+					border.style = 'dashed';
+				}
+			} else {
+				border.style = 'solid';
+			}
+		}
+
+		// lastのKeyを取得する
+		var lastKey = '';
+		for (key in border) {
+			lastKey = key;
+		}
+		var result = '';
+		for (key in border) {
+			result += border[key];
+			if (key != lastKey) {
+				result += ' ';
+			} else {
+				result += ';'
+			}
+		}
+	}
+
+	// 角丸
+	if (selection.roundness != 0) {
+		var radius = Math.round(selection.roundness);
+	}
+
+	fw.getDocumentDOM().clipCopyJsToExecute(result);
+
+// for font
+} else if (objType == '[object Text]') {
+	var fontCss = [];
+
+	// font-size
+	var fontSize = selection.fontsize + 'px';
+	var arrYuiFont = new Array;
+	arrYuiFont = {
+		'8px':'62%',
+		'9px':'68%',
+		'10px':'77%',
+		'11px':'85%',
+		'12px':'93%',
+		'13px':'100%',
+		'14px':'108%',
+		'15px':'116%',
+		'16px':'123.1%',
+		'17px':'131%',
+		'18px':'138.5%',
+		'19px':'146.5%',
+		'20px':'153.9%',
+		'21px':'161.6%',
+		'22px':'167%',
+		'23px':'174%',
+		'24px':'182%',
+		'25px':'189%',
+		'26px':'197%',
+		'27px':'207.7%',
+		'28px':'215.4%',
+		'29px':'223.1%',
+		'30px':'230.8%'
+	};
+	for (var key in arrYuiFont) {
+		if (fontSize === key){
+			fontSize = arrYuiFont[key];
+		}
+	}
+	if (fontSize !== '100%'){
+		fontCss.push('font-size: ' + fontSize + ';');
+	}
+
+	// font-weight
+	var bold = selection.bold; // fontのboldとは別？
+	var textRunsBold = selection.textRuns.textRuns[0].changedAttrs.bold;
+	if (textRunsBold === true){
+		fontCss.push('font-weight: bold;');
+	}
+
+	// color
+	var textColor = selection.textRuns.textRuns[0].changedAttrs.fillColor;
+	var arrSplitColor = [];
+	arrSplitColor[0] = textColor.substring(1, 3);
+	arrSplitColor[1] = textColor.substring(3, 5);
+	arrSplitColor[2] = textColor.substring(5, 7);
+	var resultTextColor = '#';
+	for (key in arrSplitColor) {
+		if (arrSplitColor[key].substring(0, 1) == arrSplitColor[key].substring(1, 2)) {
+			resultTextColor += arrSplitColor[key].substring(0, 1);
+		} else {
+			resultTextColor = textColor;
+		}
+	}
+	fontCss.push('color: ' + resultTextColor + ';');
+
+	// texts
+	var textChars = selection.textChars;
+
+	// line-height
+	var leading = selection.textRuns.textRuns[0].changedAttrs.leading;
+	var lineHeight = Math.round(leading * 10) / 10;
+
+	// 改行が多いテキストのみline-heightを挿入
+	var breakNum = 0;
+	var breakMatch = textChars.match(/[\n\r]/g);
+
+	if (breakMatch){
+		for (var i = 0; i < breakMatch.length; i++) {
+			breakNum++;
+		}
+	}
+	if (breakNum >= 3 && lineHeight !== 1.6){
+		fontCss.push('line-height: ' + lineHeight + ';');
+	}
+
+	// join css data
+	var result = fontCss.join('\n\t');
+
+	// copy to clipboad
+	fw.getDocumentDOM().clipCopyJsToExecute(result);
+
+}

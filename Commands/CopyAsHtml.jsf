@@ -1,0 +1,13 @@
+/* 
+ * copyAsHtml
+ *
+ * 文字列をhtmlとしてクリップボードにコピーする
+ *
+ */
+
+// テキスト
+var text = fw.selection[0].textChars;
+text = text.replace(/[\n\r]/g, '<br />\n');
+text = '<p>\n' + text + '\n</p>';
+
+fw.getDocumentDOM().clipCopyJsToExecute(text.toString())

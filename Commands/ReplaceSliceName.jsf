@@ -1,0 +1,16 @@
+var dom = fw.getDocumentDOM()
+var le = fw.selection.length;
+var sliceArray = new Array();
+
+for (var i=0;i<le;i++){if(fw.selection[i] =="[object SliceHotspot]")sliceArray.push(i);}
+var leng = sliceArray.length;
+
+var searchName = prompt('SEARCH',( fw.newName || ""));
+fw.searchName = searchName;
+var replaceStr = prompt('REPLACE',( fw.numberStr || ""));
+fw.replaceStr = replaceStr;
+
+for (var i=0;i<leng;i++){
+	var n = sliceArray[leng-i-1];
+	fw.selection[n].baseName = fw.selection[n].baseName.replace(fw.searchName,fw.replaceStr);
+}

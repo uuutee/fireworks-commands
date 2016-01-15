@@ -1,0 +1,19 @@
+/* 
+ * ChangeSliceName
+ *
+ * スライス名をプロンプトで変更する
+ */
+
+var dom = fw.getDocumentDOM()
+var sliceArray = new Array();
+
+for (var i=0;i<fw.selection.length;i++){
+	if(fw.selection[i] =="[object SliceHotspot]") 
+		sliceArray.push(i);
+}
+for (var i=0;i<sliceArray.length;i++){
+	var target = sliceArray.length-i-1;
+	var newName = prompt('Please input change slice name below.',fw.selection[target].baseName);
+	if( newName != null) 
+		fw.selection[target].baseName = newName;
+}

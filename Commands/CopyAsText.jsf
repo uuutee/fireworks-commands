@@ -1,0 +1,41 @@
+/* 
+ * copyAsHtml
+ *
+ * 文字列をプレーンテキストとしてクリップボードにコピーする
+ *
+ */
+
+var n = fw.selection.length;
+var arr = [];
+var box = [];
+
+// 取得位置の基準
+for (h = 0; h < n; h++){ 
+	var inbox = [];
+	inbox[0] = fw.selection[h];
+	inbox[1] = fw.selection[h].rawTop;
+	inbox[2] = fw.selection[h].rawLeft;
+	box.push(inbox);
+}
+
+var arr2 = box.sort(compareNumbers);
+
+for (i = 0; i < n; i++){ 
+	// check text
+	if (arr2[i][0].textChars){
+		arr.push(arr2[i][0].textChars);
+	}
+}
+
+function compareNumbers(a, b) {
+	if (a[1] == b[1]){
+		return a[2] - b[2];
+	} else {
+		return a[1] - b[1];
+	}
+}
+
+arr = arr.join(" ");
+arr = arr.replace(/[\n\r]/g, '');
+
+fw.getDocumentDOM().clipCopyJsToExecute(arr.toString());
